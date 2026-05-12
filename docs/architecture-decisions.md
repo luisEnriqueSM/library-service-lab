@@ -103,3 +103,14 @@ The initial use cases are:
 
 ### Consequences
 The domain remains simple enough for learning while still allowing us to practice business rules, uniqueness constraints, lifecycle status, and API error handling.
+
+## ADR-006: Use hexagonal architecture for the service
+
+### Status
+Accepted
+
+### Context
+The lab will use the hexagonal architecture to separate in layers. The goal is to keep the business logic independent from external technologies 
+
+### Decision
+This architecture will help us build a service that is easier to test, maintain, refactor, and evolve.
