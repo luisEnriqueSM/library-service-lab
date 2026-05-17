@@ -16,7 +16,7 @@ A `Book` represents a book registered in the library catalog.
 
 | Field | Type | Description |
 |---|---|---|
-| id | UUID | Unique book identifier |
+| id | BookId | Unique book identifier |
 | title | String | Book title |
 | author | String | Main author name |
 | isbn | String | Unique ISBN |
@@ -27,6 +27,14 @@ A `Book` represents a book registered in the library catalog.
 | updatedAt | Instant | Last update timestamp |
 
 ---
+
+## BookId
+
+Id for the Book class.
+
+| Field | Type | Description |
+|---|---|---|
+| id | UUID | Unique book identifier |
 
 ## BookStatus
 
