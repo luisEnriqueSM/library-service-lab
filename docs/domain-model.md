@@ -89,3 +89,6 @@ The following concepts are intentionally excluded from the first version:
 - Book copies
 - Ratings
 - Reviews
+
+## Future considerations:
+- Reactivate an inactive book
