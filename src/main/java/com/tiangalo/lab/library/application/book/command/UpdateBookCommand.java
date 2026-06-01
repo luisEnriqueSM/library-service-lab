@@ -15,5 +15,6 @@ public record UpdateBookCommand(
     
     public UpdateBookCommand {
         Objects.requireNonNull(bookId, "bookId cannot be null");
+        Objects.requireNonNull(isbn, "isbn cannot be null");
     }
 }
