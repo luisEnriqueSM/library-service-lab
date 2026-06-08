@@ -114,3 +114,20 @@ The lab will use the hexagonal architecture to separate in layers. The goal is t
 
 ### Decision
 This architecture will help us build a service that is easier to test, maintain, refactor, and evolve.
+
+## ADR-007: Use JPA persistence adapter for library-service
+
+### Status
+Accepted
+
+### Context
+The application layer depends on BookRepositoryPort. We need a real persistence implementation without coupling domain or application to JPA.
+
+### Decision
+We will implement a persistence adapter using Spring Data JPA. Domain Book will remain persistence-agnostic. A separate BookJpaEntity will represent the database table, and BookPersistenceMapper will convert between Book and BookJpaEntity.
+
+### Consequences
+- Domain remains clean from JPA annotations.
+- Infrastructure owns database-specific concerns.
+- Mapping code is required between domain and persistence.
+- Tests can validate persistence separately from domain and application.
