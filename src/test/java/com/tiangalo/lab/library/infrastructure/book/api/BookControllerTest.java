@@ -1,5 +1,7 @@
 package com.tiangalo.lab.library.infrastructure.book.api;
 
+import static com.tiangalo.lab.library.domain.book.model.BookCategory.SOFTWARE_ENGINEERING;
+import static com.tiangalo.lab.library.domain.book.model.BookStatus.ACTIVE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -7,8 +9,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.tiangalo.lab.library.application.book.command.CreateBookCommand;
+import com.tiangalo.lab.library.application.book.command.SearchBooksQuery;
 import com.tiangalo.lab.library.application.book.port.in.CreateBookUseCase;
 import com.tiangalo.lab.library.application.book.port.in.GetBookByIdUseCase;
+import com.tiangalo.lab.library.application.book.port.in.SearchBooksUseCase;
 import com.tiangalo.lab.library.domain.book.model.Book;
 import com.tiangalo.lab.library.domain.book.model.BookCategory;
 import com.tiangalo.lab.library.domain.book.model.BookId;
@@ -24,6 +28,8 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.Year;
 import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Locale;
 
 class BookControllerTest {
 
@@ -31,6 +37,7 @@ class BookControllerTest {
 
     private CreateBookUseCase createBookUseCase;
     private GetBookByIdUseCase getBookByIdUseCase;
+    private SearchBooksUseCase searchBooksUseCase;
     private BookApiMapper mapper;
     private Instant now;
     private Clock fixedClock;
@@ -42,7 +49,12 @@ class BookControllerTest {
         this.now = Instant.parse("2026-06-17T23:48:00Z");
         this.createBookUseCase = mock(CreateBookUseCase.class);
         this.getBookByIdUseCase = mock(GetBookByIdUseCase.class);
-        this.controller = new BookController(createBookUseCase, getBookByIdUseCase, mapper);
+        this.searchBooksUseCase = mock(SearchBooksUseCase.class);
+        this.controller = new BookController(
+                createBookUseCase,
+                getBookByIdUseCase,
+                searchBooksUseCase,
+                mapper);
     }
 
     @Test
@@ -51,7 +63,7 @@ class BookControllerTest {
                 "Clean Code",
                 "Robert C Martin",
                 "9780134494167",
-                BookCategory.SOFTWARE_ENGINEERING,
+                SOFTWARE_ENGINEERING,
                 2019,
                 now,
                 currentYear()
@@ -60,7 +72,7 @@ class BookControllerTest {
                 "Clean Code",
                 "Robert C Martin",
                 "9780134494167",
-                BookCategory.SOFTWARE_ENGINEERING.name(),
+                SOFTWARE_ENGINEERING.name(),
                 2019
         );
         when(createBookUseCase.createBook(any(CreateBookCommand.class)))
@@ -72,8 +84,8 @@ class BookControllerTest {
         assertThat(response.getBody().title()).isEqualTo("Clean Code");
         assertThat(response.getBody().author()).isEqualTo("Robert C Martin");
         assertThat(response.getBody().isbn()).isEqualTo("9780134494167");
-        assertThat(BookCategory.valueOf(response.getBody().category())).isEqualTo(BookCategory.SOFTWARE_ENGINEERING);
-        assertThat(BookStatus.valueOf(response.getBody().status())).isEqualTo(BookStatus.ACTIVE);
+        assertThat(BookCategory.valueOf(response.getBody().category())).isEqualTo(SOFTWARE_ENGINEERING);
+        assertThat(BookStatus.valueOf(response.getBody().status())).isEqualTo(ACTIVE);
         assertThat(response.getBody().createdAt()).isEqualTo(now);
         assertThat(response.getBody().updatedAt()).isEqualTo(now);
         verify(createBookUseCase).createBook(any(CreateBookCommand.class));
@@ -85,7 +97,7 @@ class BookControllerTest {
                 "Clean Code",
                 "Robert C Martin",
                 "9780134494167",
-                BookCategory.SOFTWARE_ENGINEERING,
+                SOFTWARE_ENGINEERING,
                 2019,
                 now,
                 currentYear()
@@ -104,13 +116,62 @@ class BookControllerTest {
         assertThat(response.getBody().title()).isEqualTo("Clean Code");
         assertThat(response.getBody().author()).isEqualTo("Robert C Martin");
         assertThat(response.getBody().isbn()).isEqualTo("9780134494167");
-        assertThat(BookCategory.valueOf(response.getBody().category())).isEqualTo(BookCategory.SOFTWARE_ENGINEERING);
+        assertThat(BookCategory.valueOf(response.getBody().category())).isEqualTo(SOFTWARE_ENGINEERING);
         assertThat(response.getBody().publicationYear()).isEqualTo(2019);
-        assertThat(BookStatus.valueOf(response.getBody().status())).isEqualTo(BookStatus.ACTIVE);
+        assertThat(BookStatus.valueOf(response.getBody().status())).isEqualTo(ACTIVE);
         assertThat(response.getBody().createdAt()).isEqualTo(now);
         assertThat(response.getBody().updatedAt()).isEqualTo(now);
 
         verify(getBookByIdUseCase).getBookById(bookId);
+    }
+
+    @Test
+    void searchBooksShouldReturnBookResponses() {
+        List<Book> books = List.of(
+                Book.create(
+                        "Clean Code",
+                        "Robert C Martin",
+                        "9780134494167",
+                        SOFTWARE_ENGINEERING,
+                        2019,
+                        now,
+                        currentYear()
+                ),
+                Book.create(
+                        "Clean Architecture",
+                        "Robert C Martin",
+                        "9780134494162",
+                        BookCategory.COMPUTER_SCIENCE,
+                        2017,
+                        now,
+                        currentYear()
+                )
+        );
+
+        SearchBooksQuery query = new SearchBooksQuery(
+                "clean",
+                "Robert C Martin",
+                null,
+                ACTIVE
+        );
+
+        when(searchBooksUseCase.searchBooks(query))
+                .thenReturn(books);
+
+        ResponseEntity<List<BookResponse>> response = controller.searchBooks(
+                "clean",
+                "Robert C Martin",
+                null,
+                "ACTIVE"
+        );
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).hasSize(2);
+        assertThat(response.getBody())
+                .extracting(BookResponse::title)
+                .containsExactlyInAnyOrder("Clean Code", "Clean Architecture");
+        assertThat(response.getBody()).allMatch(book -> book.title().toLowerCase(Locale.ROOT).contains("clean"));
+        verify(searchBooksUseCase).searchBooks(query);
     }
 
     private Integer currentYear() {
