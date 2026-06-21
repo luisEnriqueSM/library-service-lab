@@ -10,14 +10,17 @@ import static org.mockito.Mockito.when;
 
 import com.tiangalo.lab.library.application.book.command.CreateBookCommand;
 import com.tiangalo.lab.library.application.book.command.SearchBooksQuery;
+import com.tiangalo.lab.library.application.book.command.UpdateBookCommand;
 import com.tiangalo.lab.library.application.book.port.in.CreateBookUseCase;
 import com.tiangalo.lab.library.application.book.port.in.GetBookByIdUseCase;
 import com.tiangalo.lab.library.application.book.port.in.SearchBooksUseCase;
+import com.tiangalo.lab.library.application.book.port.in.UpdateBookUseCase;
 import com.tiangalo.lab.library.domain.book.model.Book;
 import com.tiangalo.lab.library.domain.book.model.BookCategory;
 import com.tiangalo.lab.library.domain.book.model.BookId;
 import com.tiangalo.lab.library.domain.book.model.BookStatus;
 import com.tiangalo.lab.library.infrastructure.book.api.request.CreateBookRequest;
+import com.tiangalo.lab.library.infrastructure.book.api.request.UpdateBookRequest;
 import com.tiangalo.lab.library.infrastructure.book.api.response.BookResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +41,7 @@ class BookControllerTest {
     private CreateBookUseCase createBookUseCase;
     private GetBookByIdUseCase getBookByIdUseCase;
     private SearchBooksUseCase searchBooksUseCase;
+    private UpdateBookUseCase updateBookUseCase;
     private BookApiMapper mapper;
     private Instant now;
     private Clock fixedClock;
@@ -50,10 +54,12 @@ class BookControllerTest {
         this.createBookUseCase = mock(CreateBookUseCase.class);
         this.getBookByIdUseCase = mock(GetBookByIdUseCase.class);
         this.searchBooksUseCase = mock(SearchBooksUseCase.class);
+        this.updateBookUseCase = mock(UpdateBookUseCase.class);
         this.controller = new BookController(
                 createBookUseCase,
                 getBookByIdUseCase,
                 searchBooksUseCase,
+                updateBookUseCase,
                 mapper);
     }
 
@@ -172,6 +178,51 @@ class BookControllerTest {
                 .containsExactlyInAnyOrder("Clean Code", "Clean Architecture");
         assertThat(response.getBody()).allMatch(book -> book.title().toLowerCase(Locale.ROOT).contains("clean"));
         verify(searchBooksUseCase).searchBooks(query);
+    }
+
+    @Test
+    void updateBookShouldReturnUpdatedBookResponse() {
+        Book book = Book.create(
+                "Clean Code",
+                "Robert C Martin",
+                "9780134494167",
+                SOFTWARE_ENGINEERING,
+                2019,
+                now,
+                currentYear()
+        );
+        UpdateBookRequest request = new UpdateBookRequest(
+                "Clean Code",
+                "Robert C Martin",
+                "9780134494167",
+                SOFTWARE_ENGINEERING.name(),
+                2019
+        );
+
+        UpdateBookCommand command = mapper.toUpdateCommand(
+                book.getId(),
+                request
+        );
+
+        when(updateBookUseCase.updateBook(command))
+                .thenReturn(book);
+
+        ResponseEntity<BookResponse> response = controller.updateBook(
+                book.getId().value(),
+                request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().id()).isEqualTo(book.getId().value());
+        assertThat(response.getBody().title()).isEqualTo("Clean Code");
+        assertThat(response.getBody().author()).isEqualTo("Robert C Martin");
+        assertThat(BookCategory.valueOf(response.getBody().category())).isEqualTo(SOFTWARE_ENGINEERING);
+        assertThat(response.getBody().isbn()).isEqualTo("9780134494167");
+        assertThat(BookStatus.valueOf(response.getBody().status())).isEqualTo(ACTIVE);
+        assertThat(response.getBody().publicationYear()).isEqualTo(2019);
+        assertThat(response.getBody().createdAt()).isEqualTo(now);
+        assertThat(response.getBody().updatedAt()).isEqualTo(now);
+        verify(updateBookUseCase).updateBook(command);
     }
 
     private Integer currentYear() {

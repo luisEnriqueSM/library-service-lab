@@ -2,14 +2,17 @@ package com.tiangalo.lab.library.infrastructure.book.api;
 
 import com.tiangalo.lab.library.application.book.command.CreateBookCommand;
 import com.tiangalo.lab.library.application.book.command.SearchBooksQuery;
+import com.tiangalo.lab.library.application.book.command.UpdateBookCommand;
 import com.tiangalo.lab.library.application.book.port.in.CreateBookUseCase;
 import com.tiangalo.lab.library.application.book.port.in.GetBookByIdUseCase;
 import com.tiangalo.lab.library.application.book.port.in.SearchBooksUseCase;
+import com.tiangalo.lab.library.application.book.port.in.UpdateBookUseCase;
 import com.tiangalo.lab.library.domain.book.model.Book;
 import com.tiangalo.lab.library.domain.book.model.BookCategory;
 import com.tiangalo.lab.library.domain.book.model.BookId;
 import com.tiangalo.lab.library.domain.book.model.BookStatus;
 import com.tiangalo.lab.library.infrastructure.book.api.request.CreateBookRequest;
+import com.tiangalo.lab.library.infrastructure.book.api.request.UpdateBookRequest;
 import com.tiangalo.lab.library.infrastructure.book.api.response.BookResponse;
 import jakarta.validation.Valid;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -26,23 +29,27 @@ import java.util.UUID;
 @ConditionalOnBean({
         CreateBookUseCase.class,
         GetBookByIdUseCase.class,
-        SearchBooksUseCase.class
+        SearchBooksUseCase.class,
+        UpdateBookUseCase.class
 })
 public class BookController {
 
     private final CreateBookUseCase createBookUseCase;
     private final GetBookByIdUseCase getBookByIdUseCase;
     private final SearchBooksUseCase searchBooksUseCase;
+    private final UpdateBookUseCase updateBookUseCase;
     private final BookApiMapper mapper;
 
     public BookController(
             CreateBookUseCase createBookUseCase,
             GetBookByIdUseCase getBookByIdUseCase,
             SearchBooksUseCase searchBooksUseCase,
+            UpdateBookUseCase updateBookUseCase,
             BookApiMapper mapper) {
         this.createBookUseCase = Objects.requireNonNull(createBookUseCase, "createBookUseCase cannot be null");
         this.getBookByIdUseCase = Objects.requireNonNull(getBookByIdUseCase, "getBookByIdUseCase cannot be null");
         this.searchBooksUseCase = Objects.requireNonNull(searchBooksUseCase, "searchBooksUseCase cannot be null");
+        this.updateBookUseCase = Objects.requireNonNull(updateBookUseCase, "updateBookUseCase cannot be null");
         this.mapper = Objects.requireNonNull(mapper, "mapper cannot be null");
     }
 
@@ -80,5 +87,16 @@ public class BookController {
                 .map(mapper::toResponse)
                 .toList();
         return ResponseEntity.ok(books);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<BookResponse> updateBook(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateBookRequest request) {
+        BookId bookId = BookId.from(id);
+        UpdateBookCommand command = mapper.toUpdateCommand(bookId, request);
+        Book book = updateBookUseCase.updateBook(command);
+        BookResponse response = mapper.toResponse(book);
+        return ResponseEntity.ok(response);
     }
 }
