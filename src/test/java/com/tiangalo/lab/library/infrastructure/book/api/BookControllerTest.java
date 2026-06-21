@@ -15,6 +15,7 @@ import com.tiangalo.lab.library.application.book.port.in.CreateBookUseCase;
 import com.tiangalo.lab.library.application.book.port.in.GetBookByIdUseCase;
 import com.tiangalo.lab.library.application.book.port.in.SearchBooksUseCase;
 import com.tiangalo.lab.library.application.book.port.in.UpdateBookUseCase;
+import com.tiangalo.lab.library.application.book.port.in.DeactivateBookUseCase;
 import com.tiangalo.lab.library.domain.book.model.Book;
 import com.tiangalo.lab.library.domain.book.model.BookCategory;
 import com.tiangalo.lab.library.domain.book.model.BookId;
@@ -42,6 +43,7 @@ class BookControllerTest {
     private GetBookByIdUseCase getBookByIdUseCase;
     private SearchBooksUseCase searchBooksUseCase;
     private UpdateBookUseCase updateBookUseCase;
+    private DeactivateBookUseCase deactivateBookUseCase;
     private BookApiMapper mapper;
     private Instant now;
     private Clock fixedClock;
@@ -55,11 +57,13 @@ class BookControllerTest {
         this.getBookByIdUseCase = mock(GetBookByIdUseCase.class);
         this.searchBooksUseCase = mock(SearchBooksUseCase.class);
         this.updateBookUseCase = mock(UpdateBookUseCase.class);
+        this.deactivateBookUseCase = mock(DeactivateBookUseCase.class);
         this.controller = new BookController(
                 createBookUseCase,
                 getBookByIdUseCase,
                 searchBooksUseCase,
                 updateBookUseCase,
+                deactivateBookUseCase,
                 mapper);
     }
 
@@ -223,6 +227,32 @@ class BookControllerTest {
         assertThat(response.getBody().createdAt()).isEqualTo(now);
         assertThat(response.getBody().updatedAt()).isEqualTo(now);
         verify(updateBookUseCase).updateBook(command);
+    }
+
+    @Test
+    void deleteBookShouldReturnInactiveBookResponse() {
+        Book book = Book.create(
+                "Clean Code",
+                "Robert C Martin",
+                "9780134494167",
+                SOFTWARE_ENGINEERING,
+                2019,
+                now,
+                currentYear()
+        );
+        book.deactivate(now);
+        when(deactivateBookUseCase.deactivateBook(book.getId()))
+                .thenReturn(book);
+
+        ResponseEntity<BookResponse> response = controller.deleteBook(book.getId().value());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().id()).isEqualTo(book.getId().value());
+        assertThat(response.getBody().title()).isEqualTo("Clean Code");
+        assertThat(response.getBody().author()).isEqualTo("Robert C Martin");
+        assertThat(response.getBody().isbn()).isEqualTo("9780134494167");
+        assertThat(BookStatus.valueOf(response.getBody().status())).isEqualTo(BookStatus.INACTIVE);
+        verify(deactivateBookUseCase).deactivateBook(book.getId());
     }
 
     private Integer currentYear() {

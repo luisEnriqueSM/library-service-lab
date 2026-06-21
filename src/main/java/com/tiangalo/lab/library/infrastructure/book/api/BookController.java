@@ -7,6 +7,7 @@ import com.tiangalo.lab.library.application.book.port.in.CreateBookUseCase;
 import com.tiangalo.lab.library.application.book.port.in.GetBookByIdUseCase;
 import com.tiangalo.lab.library.application.book.port.in.SearchBooksUseCase;
 import com.tiangalo.lab.library.application.book.port.in.UpdateBookUseCase;
+import com.tiangalo.lab.library.application.book.port.in.DeactivateBookUseCase;
 import com.tiangalo.lab.library.domain.book.model.Book;
 import com.tiangalo.lab.library.domain.book.model.BookCategory;
 import com.tiangalo.lab.library.domain.book.model.BookId;
@@ -30,7 +31,8 @@ import java.util.UUID;
         CreateBookUseCase.class,
         GetBookByIdUseCase.class,
         SearchBooksUseCase.class,
-        UpdateBookUseCase.class
+        UpdateBookUseCase.class,
+        DeactivateBookUseCase.class
 })
 public class BookController {
 
@@ -38,6 +40,7 @@ public class BookController {
     private final GetBookByIdUseCase getBookByIdUseCase;
     private final SearchBooksUseCase searchBooksUseCase;
     private final UpdateBookUseCase updateBookUseCase;
+    private final DeactivateBookUseCase deactivateBookUseCase;
     private final BookApiMapper mapper;
 
     public BookController(
@@ -45,11 +48,13 @@ public class BookController {
             GetBookByIdUseCase getBookByIdUseCase,
             SearchBooksUseCase searchBooksUseCase,
             UpdateBookUseCase updateBookUseCase,
+            DeactivateBookUseCase deactivateBookUseCase,
             BookApiMapper mapper) {
         this.createBookUseCase = Objects.requireNonNull(createBookUseCase, "createBookUseCase cannot be null");
         this.getBookByIdUseCase = Objects.requireNonNull(getBookByIdUseCase, "getBookByIdUseCase cannot be null");
         this.searchBooksUseCase = Objects.requireNonNull(searchBooksUseCase, "searchBooksUseCase cannot be null");
         this.updateBookUseCase = Objects.requireNonNull(updateBookUseCase, "updateBookUseCase cannot be null");
+        this.deactivateBookUseCase = Objects.requireNonNull(deactivateBookUseCase, "deactivateBookUseCase cannot be null");
         this.mapper = Objects.requireNonNull(mapper, "mapper cannot be null");
     }
 
@@ -96,6 +101,14 @@ public class BookController {
         BookId bookId = BookId.from(id);
         UpdateBookCommand command = mapper.toUpdateCommand(bookId, request);
         Book book = updateBookUseCase.updateBook(command);
+        BookResponse response = mapper.toResponse(book);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<BookResponse> deleteBook(@PathVariable UUID id) {
+        BookId bookId = BookId.from(id);
+        Book book = deactivateBookUseCase.deactivateBook(bookId);
         BookResponse response = mapper.toResponse(book);
         return ResponseEntity.ok(response);
     }
