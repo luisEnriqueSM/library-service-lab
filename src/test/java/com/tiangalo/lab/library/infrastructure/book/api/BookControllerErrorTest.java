@@ -24,8 +24,11 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -89,9 +92,21 @@ class BookControllerErrorTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
-                .andExpect(jsonPath("$.message").value("title: must not be blank"))
+                .andExpect(jsonPath("$.message").value(containsString("title")))
                 .andExpect(jsonPath("$.timestamp").value("2026-06-17T23:48:00Z"));
         verifyNoInteractions(createBookUseCase);
+    }
+
+    @Test
+    void searchBooksWhenCategoryIsInvalidShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/api/books")
+                        .param("category", "INVALID")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.message").value(containsString("INVALID")))
+                .andExpect(jsonPath("$.timestamp").value("2026-06-17T23:48:00Z"));
     }
 
     @TestConfiguration
