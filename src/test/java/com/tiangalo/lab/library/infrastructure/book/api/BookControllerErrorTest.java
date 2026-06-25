@@ -24,9 +24,8 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -78,7 +77,21 @@ class BookControllerErrorTest {
                 .andExpect(jsonPath("$.code").value("DUPLICATED_ISBN"))
                 .andExpect(jsonPath("$.message").value("Duplicated isbn"))
                 .andExpect(jsonPath("$.timestamp").value("2026-06-17T23:48:00Z"));
+    }
 
+    @Test
+    void createBookWhenRequestIsInvalidShouldReturnValidationError() throws Exception {
+        String jsonBody = "{\"title\": \"\", \"author\": \"Robert C Martin\", \"isbn\": \"9780134494167\", \"category\": \"SOFTWARE_ENGINEERING\", \"publicationYear\": 2019}";
+        mockMvc.perform(post("/api/books")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(jsonBody))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").value("title: must not be blank"))
+                .andExpect(jsonPath("$.timestamp").value("2026-06-17T23:48:00Z"));
+        verifyNoInteractions(createBookUseCase);
     }
 
     @TestConfiguration
