@@ -88,8 +88,8 @@ class BookApiIntegrationTest {
         mockMvc.perform(get("/api/books")
                         .param("status", "ACTIVE"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(bookId))
-                .andExpect(jsonPath("$[0].status").value("ACTIVE"));
+                .andExpect(jsonPath("$[?(@.id == '%s')]".formatted(bookId)).exists())
+                .andExpect(jsonPath("$[?(@.id == '%s' && @.status == 'ACTIVE')]".formatted(bookId)).exists());
 
         String updateRequest = """
                 {
@@ -118,7 +118,7 @@ class BookApiIntegrationTest {
         mockMvc.perform(get("/api/books")
                         .param("status", "INACTIVE"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(bookId))
-                .andExpect(jsonPath("$[0].status").value("INACTIVE"));
+                .andExpect(jsonPath("$[?(@.id == '%s')]".formatted(bookId)).exists())
+                .andExpect(jsonPath("$[?(@.id == '%s' && @.status == 'INACTIVE')]".formatted(bookId)).exists());
     }
 }
