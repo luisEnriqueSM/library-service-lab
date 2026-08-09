@@ -63,7 +63,7 @@ Developers working on the project will need Java 21 installed locally.
 ## ADR-004: Temporarily disable database auto-configuration
 
 ### Status
-Accepted
+Superseded by ADR-008
 
 ### Context
 Spring Data JPA is included from the beginning because the service will eventually use persistence. However, database configuration is not introduced in the first application setup stage.
@@ -131,3 +131,67 @@ We will implement a persistence adapter using Spring Data JPA. Domain Book will 
 - Infrastructure owns database-specific concerns.
 - Mapping code is required between domain and persistence.
 - Tests can validate persistence separately from domain and application.
+
+---
+
+## ADR-008: Enable local dev runtime profile and fail-fast wiring
+
+### Status
+
+Accepted
+
+### Context
+
+The service now includes the API, application, domain, and persistence layers.
+
+Previously, database auto-configuration was temporarily disabled because persistence was not configured yet. This allowed the application to start during the initial setup stage.
+
+Some production beans also used conditional registration with `@ConditionalOnBean`. This avoided startup failures while the project was still incomplete, but it also made missing critical wiring harder to detect.
+
+During manual smoke testing, `POST /api/books` returned `404 Not Found` because the controller was not registered. Spring treated `/api/books` as a static resource instead of an API endpoint.
+
+### Decision
+
+We will enable a local `dev` runtime profile using H2 and JPA so the application can be started and tested end to end.
+
+We will remove `DataSourceAutoConfiguration` and `HibernateJpaAutoConfiguration` exclusions from the main application class.
+
+We will also remove `@ConditionalOnBean` from production code for critical components such as controllers, application services, and persistence adapters.
+
+The application should fail fast during startup when required beans are missing instead of starting with incomplete functionality.
+
+### Consequences
+
+The application can now start locally with the `dev` profile and execute real HTTP requests against an in-memory H2 database.
+
+Missing wiring problems are detected during startup instead of appearing later as missing endpoints or misleading HTTP errors.
+
+This improves confidence in the real runtime behavior of the service beyond isolated unit and integration tests.
+
+The `dev` profile is intended for local development only. Production-like persistence will be handled later with a dedicated database setup.
+
+### Validation
+
+The application was started using the `dev` profile.
+
+The following endpoints were manually verified:
+
+* `POST /api/books`
+* `GET /api/books/{id}`
+* `GET /api/books?status=ACTIVE`
+* `PUT /api/books/{id}`
+* `DELETE /api/books/{id}`
+* `GET /api/books?status=INACTIVE`
+
+The full test suite was executed successfully:
+
+```bash
+./mvnw test
+```
+
+Result:
+
+```text
+Tests run: 86, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
