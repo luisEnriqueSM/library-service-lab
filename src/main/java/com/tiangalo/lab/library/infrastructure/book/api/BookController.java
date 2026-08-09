@@ -16,7 +16,6 @@ import com.tiangalo.lab.library.infrastructure.book.api.request.CreateBookReques
 import com.tiangalo.lab.library.infrastructure.book.api.request.UpdateBookRequest;
 import com.tiangalo.lab.library.infrastructure.book.api.response.BookResponse;
 import jakarta.validation.Valid;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,13 +26,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/books")
-@ConditionalOnBean({
-        CreateBookUseCase.class,
-        GetBookByIdUseCase.class,
-        SearchBooksUseCase.class,
-        UpdateBookUseCase.class,
-        DeactivateBookUseCase.class
-})
 public class BookController {
 
     private final CreateBookUseCase createBookUseCase;
