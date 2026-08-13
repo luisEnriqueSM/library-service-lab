@@ -1,9 +1,23 @@
 # API Contracts
 
+## Book API
+
 Base path:
 
-```text
-/api/v1
+```http
+/api/books
+```
+
+Swagger UI:
+
+```http
+http://localhost:8080/swagger-ui/index.html
+```
+
+OpenAPI JSON:
+
+```http
+http://localhost:8080/v3/api-docs
 ```
 
 ---
@@ -11,20 +25,20 @@ Base path:
 ## Create book
 
 ```http
-POST /api/v1/books
+POST /api/books
 ```
 
-Creates a new book.
+Creates a new book and returns the created resource.
 
-### Request
+### Request body
 
 ```json
 {
-  "title": "Clean Architecture",
-  "author": "Robert C. Martin",
-  "isbn": "9780134494166",
+  "title": "Clean Code",
+  "author": "Uncle Bob",
+  "isbn": "9780132350884",
   "category": "SOFTWARE_ENGINEERING",
-  "publicationYear": 2017
+  "publicationYear": 2008
 }
 ```
 
@@ -33,74 +47,87 @@ Creates a new book.
 ```json
 {
   "id": "8f2a7f6a-1c11-4b1b-8f5d-4d6a1d1d9c10",
-  "title": "Clean Architecture",
-  "author": "Robert C. Martin",
-  "isbn": "9780134494166",
+  "title": "Clean Code",
+  "author": "Uncle Bob",
+  "isbn": "9780132350884",
   "category": "SOFTWARE_ENGINEERING",
-  "publicationYear": 2017,
+  "publicationYear": 2008,
   "status": "ACTIVE",
-  "createdAt": "2026-05-04T23:00:00Z",
-  "updatedAt": "2026-05-04T23:00:00Z"
+  "createdAt": "2026-08-09T19:05:55.598695Z",
+  "updatedAt": "2026-08-09T19:05:55.598695Z"
 }
 ```
+
+### Responses
+
+| Status | Description |
+|---|---|
+| 201 | Book created successfully |
+| 400 | Invalid request payload |
+| 409 | ISBN already exists |
 
 ---
 
 ## Get book by id
 
 ```http
-GET /api/v1/books/{bookId}
+GET /api/books/{id}
 ```
 
-Returns a book by its identifier.
+Returns a book by its unique identifier.
 
 ### Path parameters
 
 | Name | Type | Required | Description |
 |---|---|---|---|
-| bookId | UUID | Yes | Book identifier |
+| id | UUID | Yes | Book unique identifier |
 
 ### Response `200 OK`
 
 ```json
 {
   "id": "8f2a7f6a-1c11-4b1b-8f5d-4d6a1d1d9c10",
-  "title": "Clean Architecture",
-  "author": "Robert C. Martin",
-  "isbn": "9780134494166",
+  "title": "Clean Code",
+  "author": "Uncle Bob",
+  "isbn": "9780132350884",
   "category": "SOFTWARE_ENGINEERING",
-  "publicationYear": 2017,
+  "publicationYear": 2008,
   "status": "ACTIVE",
-  "createdAt": "2026-05-04T23:00:00Z",
-  "updatedAt": "2026-05-04T23:00:00Z"
+  "createdAt": "2026-08-09T19:05:55.598695Z",
+  "updatedAt": "2026-08-09T19:05:55.598695Z"
 }
 ```
+
+### Responses
+
+| Status | Description |
+|---|---|
+| 200 | Book found |
+| 404 | Book not found |
 
 ---
 
 ## Search books
 
 ```http
-GET /api/v1/books
+GET /api/books
 ```
 
-Searches books using optional filters.
-
-By default, only `ACTIVE` books are returned.
+Searches books using optional filters such as title, author, category, and status.
 
 ### Query parameters
 
 | Name | Type | Required | Description |
 |---|---|---|---|
-| title | String | No | Partial title match |
-| author | String | No | Partial author match |
-| category | BookCategory | No | Exact category match |
-| status | BookStatus | No | Exact status match. Defaults to `ACTIVE` |
+| title | string | No | Filters books by title |
+| author | string | No | Filters books by author |
+| category | string | No | Filters books by category |
+| status | string | No | Filters books by status |
 
 ### Example
 
 ```http
-GET /api/v1/books?title=clean&author=martin&category=SOFTWARE_ENGINEERING&status=ACTIVE
+GET /api/books?title=clean&author=bob&category=SOFTWARE_ENGINEERING&status=ACTIVE
 ```
 
 ### Response `200 OK`
@@ -109,43 +136,48 @@ GET /api/v1/books?title=clean&author=martin&category=SOFTWARE_ENGINEERING&status
 [
   {
     "id": "8f2a7f6a-1c11-4b1b-8f5d-4d6a1d1d9c10",
-    "title": "Clean Architecture",
-    "author": "Robert C. Martin",
-    "isbn": "9780134494166",
+    "title": "Clean Code",
+    "author": "Uncle Bob",
+    "isbn": "9780132350884",
     "category": "SOFTWARE_ENGINEERING",
-    "publicationYear": 2017,
+    "publicationYear": 2008,
     "status": "ACTIVE",
-    "createdAt": "2026-05-04T23:00:00Z",
-    "updatedAt": "2026-05-04T23:00:00Z"
+    "createdAt": "2026-08-09T19:05:55.598695Z",
+    "updatedAt": "2026-08-09T19:05:55.598695Z"
   }
 ]
 ```
+
+### Responses
+
+| Status | Description |
+|---|---|
+| 200 | Books found |
+| 400 | Invalid search filter |
 
 ---
 
 ## Update book
 
 ```http
-PUT /api/v1/books/{bookId}
+PUT /api/books/{id}
 ```
 
-Updates editable book information.
-
-This operation does not update the book status.
+Updates an existing book by its unique identifier.
 
 ### Path parameters
 
 | Name | Type | Required | Description |
 |---|---|---|---|
-| bookId | UUID | Yes | Book identifier |
+| id | UUID | Yes | Book unique identifier |
 
-### Request
+### Request body
 
 ```json
 {
   "title": "Clean Architecture",
-  "author": "Robert C. Martin",
-  "isbn": "9780134494166",
+  "author": "Uncle Bob",
+  "isbn": "9780132350885",
   "category": "SOFTWARE_ENGINEERING",
   "publicationYear": 2017
 }
@@ -157,101 +189,111 @@ This operation does not update the book status.
 {
   "id": "8f2a7f6a-1c11-4b1b-8f5d-4d6a1d1d9c10",
   "title": "Clean Architecture",
-  "author": "Robert C. Martin",
-  "isbn": "9780134494166",
+  "author": "Uncle Bob",
+  "isbn": "9780132350885",
   "category": "SOFTWARE_ENGINEERING",
   "publicationYear": 2017,
   "status": "ACTIVE",
-  "createdAt": "2026-05-04T23:00:00Z",
-  "updatedAt": "2026-05-04T23:10:00Z"
+  "createdAt": "2026-08-09T19:05:55.598695Z",
+  "updatedAt": "2026-08-09T19:19:45.728397Z"
 }
 ```
+
+### Responses
+
+| Status | Description |
+|---|---|
+| 200 | Book updated successfully |
+| 400 | Invalid request payload |
+| 404 | Book not found |
+| 409 | ISBN already exists |
 
 ---
 
 ## Deactivate book
 
 ```http
-PATCH /api/v1/books/{bookId}/deactivate
+DELETE /api/books/{id}
 ```
 
-Deactivates a book.
-
-No request body required.
+Deactivates a book by its unique identifier and returns the updated resource.
 
 ### Path parameters
 
 | Name | Type | Required | Description |
 |---|---|---|---|
-| bookId | UUID | Yes | Book identifier |
+| id | UUID | Yes | Book unique identifier |
 
 ### Response `200 OK`
 
 ```json
 {
   "id": "8f2a7f6a-1c11-4b1b-8f5d-4d6a1d1d9c10",
-  "status": "INACTIVE"
+  "title": "Clean Architecture",
+  "author": "Uncle Bob",
+  "isbn": "9780132350885",
+  "category": "SOFTWARE_ENGINEERING",
+  "publicationYear": 2017,
+  "status": "INACTIVE",
+  "createdAt": "2026-08-09T19:05:55.598695Z",
+  "updatedAt": "2026-08-09T19:23:13.105151Z"
 }
+```
+
+### Responses
+
+| Status | Description |
+|---|---|
+| 200 | Book deactivated successfully |
+| 404 | Book not found |
+
+---
+
+## Book categories
+
+Current supported values:
+
+```text
+SOFTWARE_ENGINEERING
+COMPUTER_SCIENCE
+DATA_SCIENCE
+ARTIFICIAL_INTELLIGENCE
+BUSINESS
+OTHER
 ```
 
 ---
 
-# Error responses
+## Book statuses
 
-## Validation error
+Current supported values:
 
-Used when the request body or parameters are invalid.
-
-### Response `400 Bad Request`
-
-```json
-{
-  "timestamp": "2026-05-04T23:00:00Z",
-  "status": 400,
-  "error": "VALIDATION_ERROR",
-  "message": "Request validation failed",
-  "path": "/api/v1/books",
-  "details": [
-    {
-      "field": "title",
-      "message": "title is required"
-    }
-  ]
-}
+```text
+ACTIVE
+INACTIVE
 ```
 
 ---
 
-## Book not found
+## Error responses
 
-Used when the requested book does not exist.
+The API returns a standard error response for handled application and validation errors.
 
-### Response `404 Not Found`
+### Example
 
 ```json
 {
-  "timestamp": "2026-05-04T23:00:00Z",
-  "status": 404,
-  "error": "BOOK_NOT_FOUND",
+  "code": "BOOK_NOT_FOUND",
   "message": "Book not found",
-  "path": "/api/v1/books/8f2a7f6a-1c11-4b1b-8f5d-4d6a1d1d9c10"
+  "timestamp": "2026-08-09T19:23:13.105151Z"
 }
 ```
 
----
+### Current error codes
 
-## ISBN already exists
-
-Used when a book with the provided ISBN already exists.
-
-### Response `409 Conflict`
-
-```json
-{
-  "timestamp": "2026-05-04T23:00:00Z",
-  "status": 409,
-  "error": "ISBN_ALREADY_EXISTS",
-  "message": "A book with the provided ISBN already exists",
-  "path": "/api/v1/books"
-}
-```
+| Code | HTTP status | Description |
+|---|---:|---|
+| BAD_REQUEST | 400 | Invalid request, invalid enum value, or invalid domain input |
+| VALIDATION_ERROR | 400 | Request validation failed |
+| BOOK_NOT_FOUND | 404 | Book does not exist |
+| DUPLICATED_ISBN | 409 | ISBN already exists |
