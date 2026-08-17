@@ -1,0 +1,16 @@
+services:
+  library-mysql:
+    image: mysql:8.4
+    container_name: library-mysql
+    environment:
+      MYSQL_DATABASE: library_db
+      MYSQL_USER: library_user
+      MYSQL_PASSWORD: library_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - library_mysql_data:/var/lib/mysql
+
+volumes:
+  library_mysql_data:
