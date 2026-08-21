@@ -105,23 +105,25 @@ Health check:
 curl http://localhost:8080/actuator/health
 ```
 
+Stop services:
+
+```bash
+docker compose down
+```
+
 ---
 
 ## Run fully with Docker Compose
 
 This mode runs both the application and MySQL using Docker Compose.
 
-Build the application JAR:
-
-```bash
-./mvnw clean package
-```
-
 Build the Docker image:
 
 ```bash
 docker build -t library-service:local .
 ```
+
+The Dockerfile uses a multi-stage build, so the application JAR is built inside Docker.
 
 Start the application and MySQL:
 
