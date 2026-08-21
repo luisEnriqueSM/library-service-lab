@@ -2,16 +2,16 @@
 
 Hands-on lab to practice building a production-style microservice using:
 
-- Java 21
-- Spring Boot 4
-- Hexagonal Architecture
-- Spring Data JPA
-- MySQL
-- H2
-- Docker
-- Swagger / OpenAPI
-- Kubernetes
-- AWS ECS/EKS
+* Java 21
+* Spring Boot 4
+* Hexagonal Architecture
+* Spring Data JPA
+* MySQL
+* H2
+* Docker
+* Swagger / OpenAPI
+* Kubernetes
+* AWS ECS/EKS
 
 The goal is to build the service step by step, focusing on architecture, clean code, testing, persistence, containerization, and deployment best practices.
 
@@ -21,19 +21,19 @@ The goal is to build the service step by step, focusing on architecture, clean c
 
 The service currently supports a Book API with the following operations:
 
-- Create a book
-- Get a book by id
-- Search books
-- Update a book
-- Deactivate a book
+* Create a book
+* Get a book by id
+* Search books
+* Update a book
+* Deactivate a book
 
 The service follows a hexagonal architecture approach:
 
-- Domain layer
-- Application layer
-- Infrastructure layer
-- API adapters
-- Persistence adapters
+* Domain layer
+* Application layer
+* Infrastructure layer
+* API adapters
+* Persistence adapters
 
 ---
 
@@ -41,17 +41,17 @@ The service follows a hexagonal architecture approach:
 
 Before running the project, make sure you have:
 
-- Java 21
-- Docker
-- Maven Wrapper included in the project
+* Java 21
+* Docker
+* Maven Wrapper included in the project
 
-You can verify Java with:
+Verify Java:
 
 ```bash
 java -version
 ```
 
-You can verify Docker with:
+Verify Docker:
 
 ```bash
 docker --version
@@ -60,8 +60,6 @@ docker --version
 ---
 
 ## Run tests
-
-Run the full test suite:
 
 ```bash
 ./mvnw test
@@ -83,29 +81,16 @@ Health check:
 curl http://localhost:8080/actuator/health
 ```
 
-Expected response:
-
-```json
-{
-  "groups": ["liveness", "readiness"],
-  "status": "UP"
-}
-```
-
 ---
 
-## Run locally with MySQL using Docker
+## Run locally with MySQL using Docker and Spring Boot from the host
+
+This mode runs MySQL in Docker and runs Spring Boot directly from the host machine.
 
 Start MySQL:
 
 ```bash
-docker compose up -d
-```
-
-Check containers:
-
-```bash
-docker compose ps
+docker compose up -d library-mysql
 ```
 
 Run the application using the `docker` profile:
@@ -122,18 +107,74 @@ curl http://localhost:8080/actuator/health
 
 ---
 
+## Run fully with Docker Compose
+
+This mode runs both the application and MySQL using Docker Compose.
+
+Build the application JAR:
+
+```bash
+./mvnw clean package
+```
+
+Build the Docker image:
+
+```bash
+docker build -t library-service:local .
+```
+
+Start the application and MySQL:
+
+```bash
+docker compose up -d
+```
+
+Check containers:
+
+```bash
+docker compose ps
+```
+
+Check application logs:
+
+```bash
+docker compose logs -f library-service
+```
+
+Health check:
+
+```bash
+curl http://localhost:8080/actuator/health
+```
+
+Stop services:
+
+```bash
+docker compose down
+```
+
+Stop services and remove the MySQL volume:
+
+```bash
+docker compose down -v
+```
+
+Use `docker compose down -v` only when you want to reset the local database.
+
+---
+
 ## MySQL connection
 
 The Docker profile uses the following local database configuration:
 
-| Property | Value |
-|---|---|
-| Database | `library_db` |
-| User | `library_user` |
+| Property | Value              |
+| -------- | ------------------ |
+| Database | `library_db`       |
+| User     | `library_user`     |
 | Password | `library_password` |
-| Port | `3306` |
+| Port     | `3306`             |
 
-To connect directly to MySQL:
+Connect directly to MySQL:
 
 ```bash
 docker exec -it library-mysql mysql -u library_user -p library_db
@@ -157,24 +198,6 @@ Exit MySQL:
 ```sql
 exit;
 ```
-
----
-
-## Stop Docker services
-
-Stop MySQL while keeping persisted data:
-
-```bash
-docker compose down
-```
-
-Stop MySQL and remove the database volume:
-
-```bash
-docker compose down -v
-```
-
-Use `down -v` only when you want to reset the local database.
 
 ---
 
@@ -204,17 +227,17 @@ Base path:
 
 Available endpoints:
 
-| Method | Path | Description |
-|---|---|---|
-| POST | `/api/books` | Create a book |
-| GET | `/api/books/{id}` | Get a book by id |
-| GET | `/api/books` | Search books |
-| PUT | `/api/books/{id}` | Update a book |
+| Method | Path              | Description       |
+| ------ | ----------------- | ----------------- |
+| POST   | `/api/books`      | Create a book     |
+| GET    | `/api/books/{id}` | Get a book by id  |
+| GET    | `/api/books`      | Search books      |
+| PUT    | `/api/books/{id}` | Update a book     |
 | DELETE | `/api/books/{id}` | Deactivate a book |
 
 ---
 
-## Example request
+## Example requests
 
 Create a book:
 
@@ -242,7 +265,7 @@ curl -i "http://localhost:8080/api/books?status=ACTIVE"
 
 Additional documentation is available under the `docs` directory:
 
-- Architecture decisions
-- Domain model
-- API contracts
-- Hexagonal architecture notes
+* Architecture decisions
+* Domain model
+* API contracts
+* Hexagonal architecture notes
